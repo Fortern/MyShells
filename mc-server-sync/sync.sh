@@ -32,15 +32,15 @@ log "REPLAYS synchronization started."
 rsync -e "ssh -p $PORT -i $SSH_KEY" -rz $SSH_USER@$HOST:$GAME_PATH/$REPLAY/ $TARGET_PATH/$REPLAY
 log "REPLAYS synchronization finished."
 
-# rsync pb_blobs
-log "PB BLOBS synchronization started."
-rsync -e "ssh -p $PORT -i $SSH_KEY" -rz $SSH_USER@$HOST:$GAME_PATH/$BLOBS/ $TARGET_PATH/$BLOBS
-log "PB BLOBS synchronization finished."
-
 # rsync prime_backup.db
 log "PB DB synchronization started."
 rsync -e "ssh -p $PORT -i $SSH_KEY" -z $SSH_USER@$HOST:$GAME_PATH/$PB_DB $TARGET_PATH/$TMP_DB
 log "PB DB synchronization finished."
+
+# rsync pb_blobs
+log "PB BLOBS synchronization started."
+rsync -e "ssh -p $PORT -i $SSH_KEY" -rz $SSH_USER@$HOST:$GAME_PATH/$BLOBS/ $TARGET_PATH/$BLOBS
+log "PB BLOBS synchronization finished."
 
 # CHECK VERSION
 VERSION=$(sqlite3 "$TARGET_PATH/$TMP_DB" "SELECT version FROM db_meta LIMIT 1;")

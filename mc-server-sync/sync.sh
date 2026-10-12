@@ -7,7 +7,7 @@ BLOBS="pb_files/blobs"
 PB_DB="pb_files/prime_backup.db"
 TMP_DB="tmp.db"
 HOST="example.xyz"
-PORT="20958"
+PORT="34301"
 SSH_USER="fortern"
 SSH_KEY="$HOME/.ssh/ForternGame@fortern"
 
@@ -26,6 +26,22 @@ check_cmd() {
 
 check_cmd rsync
 check_cmd sqlite3
+check_cmd flock
+
+# Keep the lock file in place; closing fd 9 releases the lock automatically.
+mkdir -p "$TARGET_PATH"
+exec 9>"$TARGET_PATH/.sync.lock"
+if flock -n -E 75 9; then
+    :
+else
+    LOCK_STATUS=$?
+    if [ "$LOCK_STATUS" -eq 75 ]; then
+        log "Another synchronization is running; skipping."
+        exit 0
+    fi
+    log "Failed to acquire synchronization lock."
+    exit "$LOCK_STATUS"
+fi
 
 # rsync replay
 log "REPLAYS synchronization started."
@@ -51,8 +67,9 @@ fi
 log "PB db_meta checking succeed!"
 
 # merge db
-sqlite3 "$TARGET_PATH/$PB_DB" <<EOF
+sqlite3 -bail "$TARGET_PATH/$PB_DB" <<EOF
 ATTACH DATABASE '$TARGET_PATH/$TMP_DB' AS tmp;
+BEGIN IMMEDIATE;
 
 INSERT INTO blob SELECT * FROM tmp.blob WHERE true
 ON CONFLICT(hash) DO NOTHING;
@@ -66,6 +83,7 @@ ON CONFLICT(fileset_id, path) DO NOTHING;
 INSERT INTO backup SELECT * FROM tmp.backup WHERE creator NOT LIKE '%pre_restore%'
 ON CONFLICT(id) DO NOTHING;
 
+COMMIT;
 DETACH DATABASE tmp;
 EOF
 

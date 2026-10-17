@@ -1,0 +1,16 @@
+# 复制为脚本同目录下的 config，然后填写参数。此文件按 Bash 语法读取。
+SERVICE_ID='123456'
+API_UUID='your-uuid'
+
+# 通知地址不包含 /send_group_msg，脚本会自动追加。
+NOTIFY_BASE_URL='https://notify.example.com'
+NOTIFY_TOKEN='your-token'
+NOTIFY_USER_ID='123456789'
+
+# 周期用量达到这些百分比时提醒，每档每周期一次。
+PERCENT_THRESHOLDS='25 50 65 80 90 95'
+
+# 最近 15 分钟使用达到 3 GB 时提醒，冷却 30 分钟。
+WINDOW_SECONDS=900
+WINDOW_LIMIT_BYTES=3000000000
+COOLDOWN_SECONDS=1800
